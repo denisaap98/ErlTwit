@@ -76,17 +76,34 @@ handle_get("hello_world", Req, _) ->
    Body = rec2json:msg2json(msg, "Hello World!"),
 Req:respond({200, [{"Content-Type", "text/plain"}], Body});
 
+handle_get("get_twits", Req, _) ->
+   error_logger:info_msg("[GET]: Get twits"),
+   Twits = mochiglobal:get(twit),
+   Body = twit:generate_body(Twits),
+   Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+
 handle_get(Path, Req, DocRoot) ->
-   error_logger:info_msg("[GET]: Ohter"),
+   error_logger:info_msg("[GET]: Other"),
    Req:serve_file(Path, DocRoot).
+
+
 
 handle_post("create", Req, _) ->
    error_logger:info_msg("[POST]: Create"),
    [Id, Username, Date] = get_params(Req),
-   Account = #account{id=Id, username = Username, date = Date, followers = [], following = []},
+   Account = #account{id = Id, username = Username, date = Date, followers = [], following = []},
    Accounts = mochiglobal:get(account),
    Body = account:create_account(Accounts, Account),
    Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   
+handle_post("post_twit", Req, _) ->
+   error_logger:info_msg("[POST]: Post twit"),
+   [User, Mesaj, Data, Likes, Shares] = get_params(Req),
+   Twit = #twit{user = User, mesaj = Mesaj, data = Data, likes = Likes, shares = Shares},
+   Twits = mochiglobal:get(twit),
+   Body = twit:create_twit(Twits, Twit),
+   Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   
 
 handle_post(_Path, Req, _DocRoot) ->
    error_logger:info_msg("[POST]: Other"),
