@@ -31,3 +31,7 @@ generate_body(hd(Accounts)).
 search_account_byId(_, _)->
     0.
 
+% erl 
+% cd("ebin")
+% l(dbutils)
+% dbutils:insert_user()

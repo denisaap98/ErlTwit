@@ -10,24 +10,24 @@ to_json(Account) ->
 	AccountList = tuple_to_list(Account),
 	erlang:display(hd(AccountList)).
 
-% to_proplist(Record) ->
-% 	to_proplist(Record, []).
+ to_proplist(Record) ->
+ 	to_proplist(Record, []).
 
-% to_proplist(Type = #account{}, []) ->
-% 	lists:zip(record_info(fields, account), to_list(Type));
-% to_proplist(Type = #account_info{}, []) ->
-% 	lists:zip(record_info(fields, account_info), to_list(Type));
+ to_proplist(Type = #twit{}, []) ->
+ 	lists:zip(record_info(fields, twit), to_list(Type));
 
 
-% to_proplist(Val, []) ->
-% 	Val;
-% to_proplist([], Result) ->
-% 	lists:reverse(Result);
-% to_proplist([H|T], Result) ->
-% 	to_proplist(T, [to_proplist(H,[]) | Result]).
 
-% to_list(Type) ->
-% 	[to_proplist(L, []) || L <- tl(tuple_to_list(Type))].
+
+ to_proplist(Val, []) ->
+ 	Val;
+ to_proplist([], Result) ->
+ 	lists:reverse(Result);
+ to_proplist([H|T], Result) ->
+ 	to_proplist(T, [to_proplist(H,[]) | Result]).
+
+ to_list(Type) ->
+ 	[to_proplist(L, []) || L <- tl(tuple_to_list(Type))].
 
 % proplist2json(Proplist) ->
 % 	proplist2json(Proplist, "{").
@@ -50,13 +50,13 @@ msg2json(error, Msg) ->
 	"{\n\t\t\"error\" : \"" ++ Msg ++ "\"\n}";
 
 msg2json(Key, Value) when is_list(Key), is_list(Value) ->
-	T = lists:zipwith(fun(X, Y) -> "\t\t\"" ++ X ++ " : \"" ++ Y ++ "\",\n" end, Key, Value),
+	T = lists:zipwith(fun(X, Y) -> "\t\t\"" ++ X ++ "\" : \"" ++ Y ++ "\",\n" end, Key, Value),
 	Last = lists:last(T),
 	NewElem = lists:droplast(lists:droplast(Last)),
 	"{\n" ++ lists:droplast(T) ++ NewElem ++ "\n}";
 
 msg2json(Key, Value) ->
-	"{\n\t\t\"" ++ Key ++ "\" : \"" ++ Value ++ "\"\n}".
+	" {\n\t\t\" " ++ Key ++ " \" : \" " ++ Value ++ " \" \n}".
 
 json2proplist(JSON) ->
 	io:format("~p", JSON).

@@ -55,13 +55,15 @@ stop() -> mochiweb_http:stop(?MODULE).
 
 loop ( Req , DocRoot ) -> 
     "/" ++ Path = Req : get ( path ) , 
+
         try case Req : get ( method ) of
          Method when 
             Method =:= 'GET' ;  Method =:= 'HEAD' -> 
                 handle_get(Path, Req, DocRoot);
             'POST' -> 
                 handle_post(Path, Req, DocRoot);
-            _ -> 
+            Other ->
+                io:format("501 ~p",[Other]), 
                 Req : respond ( { 501 , [ ] , [ ] } ) 
             end 
         catch ? CAPTURE_EXC_PRE ( Type , What , Trace ) -> 
@@ -74,13 +76,25 @@ loop ( Req , DocRoot ) ->
 handle_get("hello_world", Req, _) ->
    error_logger:info_msg("[GET]: Hello World"),
    Body = rec2json:msg2json(msg, "Hello World!"),
-Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+
 
 handle_get("get_twits", Req, _) ->
    error_logger:info_msg("[GET]: Get twits"),
    Twits = mochiglobal:get(twit),
    Body = twit:generate_body(Twits),
+   Body2 = "{" ++
+       " \" twits \" " ++ ":" ++  [Body] ++
+   "}",
+   %Req:respond({200, [{"Access-Control-Allow-Origin", "http://localhost:4200"},{"Content-Type", "text/plain"}], Body});
+   Req:respond({200, [{"Access-Control-Allow-Origin", "http://localhost:4200"},{"Content-Type", "application/json"}], Body});
+
+handle_get("get_accounts", Req, _) ->
+   error_logger:info_msg("[GET]: Get accounts"),
+   Accounts = mochiglobal:get(account),
+   Body = twit:generate_body(Accounts),
    Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   %Req:respond({200, [{"Access-Control-Allow-Origin", "http://localhost:4200"},{"Content-Type", "application/json"}], Body});
 
 handle_get(Path, Req, DocRoot) ->
    error_logger:info_msg("[GET]: Other"),
@@ -94,15 +108,19 @@ handle_post("create", Req, _) ->
    Account = #account{id = Id, username = Username, date = Date, followers = [], following = []},
    Accounts = mochiglobal:get(account),
    Body = account:create_account(Accounts, Account),
-   Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   %Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   Req:respond({200, [{"Access-Control-Allow-Origin", "http://localhost:4200"},{"Content-Type", "application/json"}], Body});
    
 handle_post("post_twit", Req, _) ->
    error_logger:info_msg("[POST]: Post twit"),
-   [User, Mesaj, Data, Likes, Shares] = get_params(Req),
+   [Data, Likes, Mesaj, Shares, User] = get_params(Req),
    Twit = #twit{user = User, mesaj = Mesaj, data = Data, likes = Likes, shares = Shares},
-   Twits = mochiglobal:get(twit),
-   Body = twit:create_twit(Twits, Twit),
-   Req:respond({200, [{"Content-Type", "text/plain"}], Body});
+   %Twit = #twit{user = _, mesaj = Mesaj, data = _, likes = _, shares = _},
+   %Twits = mochiglobal:get(twit),
+   Body = twit:create_twit(Twit),
+   io:format("Post twit: ~p", [Body]),
+  % Req:respond({200, [{"Access-Control-Allow-Origin", "http://localhost:4200"},{"Content-Type", "text/plain"}], Body});
+    Req:respond({200, [{"Access-Control-Allow-Origin", "http://localhost:4200"},{"Content-Type", "application/json"}], Body});
    
 
 handle_post(_Path, Req, _DocRoot) ->
